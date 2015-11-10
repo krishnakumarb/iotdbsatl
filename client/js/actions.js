@@ -4,15 +4,12 @@ export const REQUEST_STATUS = 'REQUEST_STATUS'
 export const RECEIVE_STATUS = 'RECEIVE_STATUS'
 
 export function requestStatus() {
-  console.log('function requestStatus');
   return {
     type: REQUEST_STATUS
   }
 }
 
 export function receiveStatus(json) {
-  console.log('function receiveStatus');
-  console.log(json);
   var offices = json.map(function (office) {
     return {
       "name": office.deviceId,
@@ -27,7 +24,7 @@ export function receiveStatus(json) {
     // duplicate statuses for an office.
     return a.name > b.name ? 1 : a.name < b.name ? -1 : (a.lastUpdate > b.lastUpdate ? -1 : 1);
   });
-  console.log(offices);
+
   return {
     type: RECEIVE_STATUS,
     offices: offices,
@@ -38,7 +35,7 @@ export function receiveStatus(json) {
 export function fetchStatus() {
   return function(dispatch) {
     dispatch(requestStatus())
-    return fetch('http://localhost:8080/api')
+    return fetch('/api')
       .then(response => response.json())
       .then(json => dispatch(receiveStatus(json)))
   }

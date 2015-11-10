@@ -16,8 +16,6 @@ class App extends Component {
   }
 
   render () {
-    console.log('Dodo render')
-    console.log(this)
     return (
       <OfficeList pollInterval={10000} getData={this.getData} data={this.props.data}/>
     );
@@ -174,8 +172,6 @@ var Stats = React.createClass({
   });
 
 function select(state) {
-  console.log('function select');
-  console.log(state);
   return {
     data: state.officeStatus.offices,
     hasErrors: false // TODO: change this

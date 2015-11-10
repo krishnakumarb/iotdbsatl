@@ -1,48 +1,33 @@
-import $ from 'jquery'
-import React from 'react'
-import ReactDOM from 'react-dom'
+import React, { Component } from 'react'
 import { Router, Route, Link } from 'react-router'
+import { connect } from 'react-redux';
 import ClassNames from 'classnames'
 import { Treemap } from 'react-d3';
+import { fetchStatus } from './actions'
 
-var Dodo = React.createClass({
-  render: function () {
+class App extends Component {
+  constructor(props) {
+    super(props)
+    this.getData = this.getData.bind(this)
+  }
+
+  getData() {
+    this.props.dispatch(fetchStatus())
+  }
+
+  render () {
+    console.log('Dodo render')
+    console.log(this)
     return (
-      <OfficeList url="/api" pollInterval={10000}/>
+      <OfficeList pollInterval={10000} getData={this.getData} data={this.props.data}/>
     );
   }
-});
+};
 
 var OfficeList = React.createClass({
   loadOfficeStatus: function() {
-    $.ajax({
-      url: this.props.url,
-      dataType: 'json',
-      cache: false,
-      success: function(data) {
-        var offices = data.map(function (office) {
-          return {
-            "name": office.deviceId,
-            "description": null,
-            "occupied": (office.isOccupied == 0 || office.isOccupied == false) ? false : true,
-            "lastUpdate": office.timestamp
-          }
-        });
-        offices.sort(function (a, b) {
-          // Sort by ascending order of name and then by descending order of lastUpdate
-          // to make sure that the latest status is shown even if the API returns
-          // duplicate statuses for an office.
-          return a.name > b.name ? 1 : a.name < b.name ? -1 : (a.lastUpdate > b.lastUpdate ? -1 : 1);
-        });
-        this.setState({data: offices});
-        this.setState({hasErrors: false});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error(this.props.url, status, err.toString());
-        this.setState({errorMessage: "Unable to connect to server"});
-        this.setState({hasErrors: true});
-      }.bind(this)
-    });
+    const { getData } = this.props
+    getData();
   },
   getInitialState: function() {
     return {
@@ -62,7 +47,7 @@ var OfficeList = React.createClass({
     this.intervals.forEach(clearInterval);
   },
   render: function() {
-    var offices = this.state.data.map(function (office) {
+    var offices = this.props.data.map(function (office) {
       return (
         <div className="col-xs-6 col-sm-3" key={office.name}>
           <StatusTile data={office}/>
@@ -178,8 +163,8 @@ var Stats = React.createClass({
         { this.state.hasErrors ? <ErrorMessage message={this.state.errorMessage} /> : null }
         <Treemap
           data={this.state.treemapData}
-          width={640}
-          height={480}
+          width={800}
+          height={600}
           textColor="#484848"
           fontSize="12px"
           title="Heat Map"
@@ -188,9 +173,13 @@ var Stats = React.createClass({
     )}
   });
 
-ReactDOM.render((
-  <Router>
-    <Route path="/" component={Dodo} />
-    <Route path="stats" component={Stats} />
-  </Router>
-), document.getElementById('content'));
+function select(state) {
+  console.log('function select');
+  console.log(state);
+  return {
+    data: state.officeStatus.offices,
+    hasErrors: false // TODO: change this
+  }
+}
+
+export default connect(select)(App)
